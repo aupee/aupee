@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseScalp Pro — Crypto Analysis Dashboard</title>
+  <meta name="description" content="Professional crypto scalping analysis dashboard with multi-exchange market data, risk management, and premium UI." />
+  <meta name="theme-color" content="#08111f" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-grid"></div>
+
+  <main class="app-shell">
+    <section class="hero card">
+      <div class="hero-copy">
+        <div class="eyebrow">Multi-exchange futures scanner</div>
+        <h1>PulseScalp Pro</h1>
+        <p class="hero-text">
+          Analyze futures market structure, momentum, tape, order book pressure, and risk in one click.
+          Built for fast scalping decisions with clean TradingView-style panels.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#dashboard" class="btn btn-primary">Open Dashboard</a>
+          <button id="refreshSymbols" class="btn btn-ghost" type="button">Refresh Coins</button>
+        </div>
+
+        <div class="hero-metrics">
+          <div class="metric">
+            <span>Execution</span>
+            <strong>Click-to-analyze</strong>
+          </div>
+          <div class="metric">
+            <span>Market</span>
+            <strong>Futures / Perpetual</strong>
+          </div>
+          <div class="metric">
+            <span>Sources</span>
+            <strong>Bybit + OKX fallback</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-panel">
+        <div class="mini-card">
+          <div class="mini-title">Signal preview</div>
+          <div id="signalBadge" class="signal-badge neutral">NO TRADE</div>
+          <div class="mini-grid">
+            <div><span>Confidence</span><strong id="confidencePreview">--</strong></div>
+            <div><span>Market</span><strong id="marketPreview">--</strong></div>
+            <div><span>Volume</span><strong id="volumePreview">--</strong></div>
+            <div><span>Pressure</span><strong id="pressurePreview">--</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard" class="dashboard">
+      <div class="control-bar card">
+        <div class="field">
+          <label for="symbolSelect">Coin selector</label>
+          <select id="symbolSelect"></select>
+        </div>
+        <div class="field">
+          <label for="capital">Capital (USDT)</label>
+          <input id="capital" type="number" min="10" step="1" value="100" />
+        </div>
+        <div class="field">
+          <label for="riskPercent">Risk %</label>
+          <input id="riskPercent" type="number" min="1" max="2" step="0.1" value="1" />
+        </div>
+        <div class="field">
+          <label for="leverageMode">Leverage mode</label>
+          <select id="leverageMode">
+            <option value="auto">Auto</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="leverage">Leverage</label>
+          <input id="leverage" type="number" min="1" max="125" step="1" value="5" />
+        </div>
+        <div class="field action-field">
+          <label>&nbsp;</label>
+          <button id="analyzeBtn" class="btn btn-primary btn-full">Start Analysis</button>
+        </div>
+      </div>
+
+      <div id="loading" class="loading card hidden">
+        <div class="spinner"></div>
+        <div>
+          <strong>Analyzing market structure...</strong>
+          <p>Pulling candles, depth, and trade tape from the live exchange feed.</p>
+        </div>
+      </div>
+
+      <div id="errorBox" class="error-box card hidden"></div>
+
+      <section class="grid">
+        <article class="card result-card highlight">
+          <div class="section-head">
+            <h2>Final Signal Panel</h2>
+            <span id="sourceTag" class="tag">source: -</span>
+          </div>
+          <div class="big-signal-wrap">
+            <div id="signalMain" class="signal-badge neutral big">NO TRADE</div>
+            <div>
+              <div class="subtle">Confidence</div>
+              <div id="confidenceMain" class="big-number">--%</div>
+            </div>
+          </div>
+          <p id="reasonText" class="reason-text">Press Start Analysis to generate the first setup.</p>
+          <div class="rr-box">
+            <div><span>R/R</span><strong id="rrRatio">--</strong></div>
+            <div><span>Market condition</span><strong id="marketCondition">--</strong></div>
+            <div><span>Volume</span><strong id="volumeCondition">--</strong></div>
+            <div><span>Tape</span><strong id="tapeMomentum">--</strong></div>
+          </div>
+        </article>
+
+        <article class="card result-card">
+          <div class="section-head">
+            <h2>Trade Plan</h2>
+          </div>
+          <div class="trade-grid">
+            <div><span>Entry</span><strong id="entryPrice">--</strong></div>
+            <div><span>Stop Loss</span><strong id="stopLoss">--</strong></div>
+            <div><span>TP1</span><strong id="tp1">--</strong></div>
+            <div><span>TP2</span><strong id="tp2">--</strong></div>
+            <div><span>TP3</span><strong id="tp3">--</strong></div>
+            <div><span>Leverage</span><strong id="suggestedLev">--</strong></div>
+          </div>
+        </article>
+
+        <article class="card result-card">
+          <div class="section-head">
+            <h2>Market Data</h2>
+          </div>
+          <div class="info-grid">
+            <div><span>Current Price</span><strong id="currentPrice">--</strong></div>
+            <div><span>Spread</span><strong id="spreadInfo">--</strong></div>
+            <div><span>Order Book</span><strong id="orderbookPressure">--</strong></div>
+            <div><span>Tape</span><strong id="tapeInfo">--</strong></div>
+            <div><span>Volume</span><strong id="volumeInfo">--</strong></div>
+            <div><span>Fee impact</span><strong id="feeInfo">--</strong></div>
+          </div>
+        </article>
+
+        <article class="card result-card">
+          <div class="section-head">
+            <h2>Indicator Results</h2>
+          </div>
+          <div class="indicator-list" id="indicatorList"></div>
+        </article>
+
+        <article class="card result-card">
+          <div class="section-head">
+            <h2>Order Book Pressure</h2>
+          </div>
+          <div class="mini-stats">
+            <div><span>Bid volume</span><strong id="bidVolume">--</strong></div>
+            <div><span>Ask volume</span><strong id="askVolume">--</strong></div>
+            <div><span>Best bid</span><strong id="bestBid">--</strong></div>
+            <div><span>Best ask</span><strong id="bestAsk">--</strong></div>
+          </div>
+        </article>
+
+        <article class="card result-card">
+          <div class="section-head">
+            <h2>Risk Management</h2>
+          </div>
+          <div class="mini-stats">
+            <div><span>Risk amount</span><strong id="riskAmount">--</strong></div>
+            <div><span>Qty estimate</span><strong id="qtyEstimate">--</strong></div>
+            <div><span>Notional</span><strong id="notionalEstimate">--</strong></div>
+            <div><span>Precision</span><strong id="precisionInfo">--</strong></div>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
